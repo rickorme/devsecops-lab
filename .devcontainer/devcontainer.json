@@ -1,6 +1,6 @@
 {
   // Name the container environment
-  "name": "Playwright Node.js + Python Dev Container",
+  "name": "DevSecOps Lab Container",
 
   // Use a base image that already includes Node.js
   "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
