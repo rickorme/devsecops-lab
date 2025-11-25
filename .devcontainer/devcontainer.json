@@ -1,0 +1,39 @@
+{
+  // Name the container environment
+  "name": "Playwright Node.js + Python Dev Container",
+
+  // Use a base image that already includes Node.js
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+
+  // Ensure both Node deps and Python deps are installed after container creation
+  "postCreateCommand": "npm install && python -m pip install --upgrade pip setuptools wheel && if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install fastapi uvicorn[standard]; fi",
+
+  // Forward the FastAPI default port
+  "forwardPorts": [8000],
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-playwright.playwright",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ritwickdey.LiveServer"
+      ]
+    }
+  },
+
+  // Features to add browser dependencies
+  // "features": {
+  //   "ghcr.io/devcontainers/features/playwright:1": {
+  //     "version": "latest",
+  //     "installBrowsers": true 
+  //   }
+  // }  
+  
+  // Add Python feature so the container has a proper Python runtime preinstalled
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11"
+    }
+  }
+}
