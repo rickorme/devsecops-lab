@@ -1,0 +1,50 @@
+name: Python Dependency Audit
+
+on:
+  # Triggers the workflow on push events to the 'main' branch
+  push:
+    branches: 
+      - main
+      - develop
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      # Action to clone your repository content
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+         python-version: '3.11.14'
+
+    - name: Install dependencies
+      run: |
+        # Upgrade pip and install the core auditing tool
+        python -m pip install --upgrade pip
+        pip install pip-audit
+        
+        # Install your project dependencies listed in requirements.txt
+        # 'pip install -r requirements.txt' is crucial for audit to work
+        if [ -f ../.devcontainer/requirements.txt ]; then
+          pip install -r ../.devcontainer/requirements.txt
+        else
+          echo "No requirements.txt found. Skipping project dependency install."
+        fi
+
+    - name: Run pip-audit scan
+      # This runs pip-audit on the installed environment.
+      # The '--strict' flag ensures a non-zero exit code (failure) if vulnerabilities are found.
+      run: pip-audit --strict
+      
+    # This optional step shows the result in an easily readable format 
+    - name: Summarize Audit Results
+      if: always() # Run this step even if the previous step fails (due to vulnerabilities)
+      run: |
+        # Use the tool again, piping the output to the workflow summary
+        pip-audit
