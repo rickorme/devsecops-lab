@@ -21,19 +21,23 @@
       ]
     }
   },
-
-  // Features to add browser dependencies
-  // "features": {
-  //   "ghcr.io/devcontainers/features/playwright:1": {
-  //     "version": "latest",
-  //     "installBrowsers": true 
-  //   }
-  // }  
   
-  // Add Python feature so the container has a proper Python runtime preinstalled
+// 1. FEATURES SECTION (must be a complete object)
   "features": {
     "ghcr.io/devcontainers/features/python:1": {
       "version": "3.11"
     }
-  }
+    // ... other features ...
+  }, // <-- The features block ends here!
+
+  // 2. CONTAINER ENV SECTION (must be a separate, top-level property)
+  "containerEnv": {
+    "SSH_AUTH_SOCK": "/tmp/ssh-agent.sock"
+  },
+
+  // 3. RUN ARGS SECTION (must be a separate, top-level property)
+  "runArgs": [
+    "-v", 
+    "${env:SSH_AUTH_SOCK}:/tmp/ssh-agent.sock"
+  ]
 }

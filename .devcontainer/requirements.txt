@@ -1,5 +1,6 @@
 # requirements.txt
 fastapi
+fastapi-users[sqlalchemy]
 uvicorn[standard]
 pydantic
 pytest
