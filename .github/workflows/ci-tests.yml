@@ -31,8 +31,8 @@ jobs:
         
         # Install your project dependencies listed in requirements.txt
         # 'pip install -r requirements.txt' is crucial for audit to work
-        if [ -f ../.devcontainer/requirements.txt ]; then
-          pip install -r ../.devcontainer/requirements.txt
+        if [ -f .devcontainer/requirements.txt ]; then
+          pip install -r .devcontainer/requirements.txt
         else
           echo "No requirements.txt found. Skipping project dependency install."
         fi
