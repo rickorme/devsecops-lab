@@ -24,27 +24,14 @@ jobs:
          python-version: '3.11.14'
 
     - name: Install dependencies
-      run: |
-        # Upgrade pip and install the core auditing tool
-        python -m pip install --upgrade pip
-        pip install pip-audit
-        
-        # Install your project dependencies listed in requirements.txt
-        # 'pip install -r requirements.txt' is crucial for audit to work
-        if [ -f .devcontainer/requirements.txt ]; then
-          pip install -r .devcontainer/requirements.txt
-        else
-          echo "No requirements.txt found. Skipping project dependency install."
-        fi
+      run: make Install
 
     - name: Run pip-audit scan
       # This runs pip-audit on the installed environment.
       # The '--strict' flag ensures a non-zero exit code (failure) if vulnerabilities are found.
-      run: pip-audit --strict
+      run: make audit
       
     # This optional step shows the result in an easily readable format 
     - name: Summarize Audit Results
       if: always() # Run this step even if the previous step fails (due to vulnerabilities)
-      run: |
-        # Use the tool again, piping the output to the workflow summary
-        pip-audit
+      run: make audit-report

@@ -1,0 +1,7 @@
+# pyproject.toml
+
+# --- Tool Configuration (Replacing pytest.ini) ---
+[tool.pytest.ini_options]
+# Specifies the default arguments for 'pytest'
+addopts = "-v --cov=app --cov-report=term-missing"
+testpaths = "tests"
