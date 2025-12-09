@@ -24,7 +24,7 @@ jobs:
          python-version: '3.11.14'
 
     - name: Install dependencies
-      run: make Install
+      run: make install
 
     - name: Run pip-audit scan
       # This runs pip-audit on the installed environment.
