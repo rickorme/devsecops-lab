@@ -6,8 +6,9 @@ all: install test
 # Installation: Upgrades pip, installs audit tool, installs app deps
 install:
 	python -m pip install --upgrade pip setuptools wheel
-	pip install pip-audit
-	pip install -r requirements.txt
+# 	pip install pip-audit
+# 	pip install -r requirements.txt
+	pip install -e ".[dev]"
 
 run:
 	uvicorn main:app --host 0.0.0.0 --port 8000 --reload
