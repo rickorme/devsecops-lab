@@ -23,9 +23,11 @@ classifiers = [
 
 # Production Dependencies (What the app needs to run)
 dependencies = [
-    "fastapi",
-    "fastapi-users[sqlalchemy]",
-    "aiosqlite",
+    "aiosqlite>=0.21.0",
+    "fastapi>=0.118.0",
+    "fastapi-users[sqlalchemy]>=14.0.1",
+    "python-dotenv>=1.1.1",
+    "streamlit>=1.50.0",
     "uvicorn[standard]",
     "pydantic", # Note: Pydantic is implicitly installed by fastapi, but listed here for clarity
     "email-validator"
