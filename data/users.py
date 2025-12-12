@@ -1,4 +1,4 @@
-from models import User, Role
+from data.models import User, Role
 from pydantic import ValidationError
 
 raw_users = [

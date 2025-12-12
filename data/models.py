@@ -20,3 +20,11 @@ class User(BaseModel):
         if v <= 0:
             raise ValueError("ID must be a positive integer")
         return v
+    
+class PostCreate(BaseModel):
+    title: str
+    content: str
+
+class PostResponse(BaseModel):
+    title: str
+    content: str
