@@ -340,3 +340,7 @@ package-lock.json
 # pnpm-lock.yaml
 # yarn
 # yarn.lock
+
+
+# Ignore test database files
+test.db
