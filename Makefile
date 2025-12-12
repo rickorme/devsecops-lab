@@ -19,12 +19,12 @@ test:
 
 # Auditing: Runs the security audit
 audit:
-	pip-audit --strict
+	pip-audit --strict --exclude my-fastapi-app
 
 # Runs audit without strict mode. This is just for logging/display.
 # It won't crash the build if it finds something.
 audit-report:
-	pip-audit
+	pip-audit --exclude my-fastapi-app
 
 # Clean up: Removes cache files (optional but nice to have)
 clean:
