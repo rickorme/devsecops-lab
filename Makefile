@@ -11,7 +11,7 @@ install:
 	pip install -e ".[dev]"
 
 run:
-	uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+	uvicorn src.routes:app --host 0.0.0.0 --port 8000 --reload
 
 # Testing: Runs pytest
 test:
