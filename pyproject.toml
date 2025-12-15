@@ -30,6 +30,7 @@ dependencies = [
     "streamlit>=1.50.0",
     "uvicorn[standard]",
     "pydantic", # Note: Pydantic is implicitly installed by fastapi, but listed here for clarity
+    "pydantic-settings",
     "email-validator"
 ]
 
