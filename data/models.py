@@ -2,24 +2,8 @@
 from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional
 from enum import Enum
-
-class Role(str, Enum):
-    ADMIN = "admin"
-    USER = "user"
-    MODERATOR = "moderator"
-
-class User(BaseModel):
-    id: int
-    name: str
-    email: EmailStr
-    age: Optional[int] = None
-    role: Role = Role.USER
-
-    @field_validator("id")
-    def id_must_be_positive(cls, v):
-        if v <= 0:
-            raise ValueError("ID must be a positive integer")
-        return v
+from fastapi_users import schemas
+import uuid
     
 class PostCreate(BaseModel):
     title: str
@@ -28,3 +12,12 @@ class PostCreate(BaseModel):
 class PostResponse(BaseModel):
     title: str
     content: str
+
+class UserRead(schemas.BaseUser[uuid.UUID]):
+    pass
+
+class UserCreate(schemas.BaseUserCreate):
+    pass
+
+class UserUpdate(schemas.BaseUserUpdate):
+    pass

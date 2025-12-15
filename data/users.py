@@ -1,61 +1,49 @@
-from data.models import User, Role
-from pydantic import ValidationError
+import uuid
+from typing import Optional
+from fastapi import Depends, Request
+from fastapi_users import BaseUserManager, FastAPIUsers, UUIDIDMixin, models
+from fastapi_users.authentication import (
+    AuthenticationBackend,
+    BearerTransport,
+    JWTStrategy
+)
+from fastapi_users.db import SQLAlchemyUserDatabase
+from data.db import User, get_user_db
+from config import get_settings
 
-raw_users = [
-    {
-        "id": 1,
-        "name": "John Doe",
-        "email": "john.doe@example.com",
-        "age": 30,
-        "role": "admin"
-    },
-    {
-        "id": 2,
-        "name": "Jane Smith",
-        "email": "jane.smith@example.com",
-        "age": 25,
-        "role": "user"
-    },
-    {
-        "id": 3,
-        "name": "Bob Johnson",
-        "email": "bob.johnson@example.com",
-        "age": 35,
-        "role": "user"
-    },
-    {
-        "id": 4,
-        "name": "Alice Brown",
-        "email": "alice.brown@example.com",
-        "age": 28,
-        "role": "moderator"
-    },
-    {   "id": -5,
-        "name": "Charlie Davis",
-        "email": "",
-        "age": 22,
-        "role": "winner"
-    }
-]
+settings = get_settings()
+token_secret = settings.user_token_secret.get_secret_value()
 
-valid_users = []
-for raw_user in raw_users:
-    try:
-        # This converts the dict into a User object
-        user = User(**raw_user)
-        valid_users.append(user)
-        print(f"Validated user: {user.name}")
+class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
+    settings = get_settings()
+    token_secret = settings.user_token_secret.get_secret_value()
+    reset_password_token_secret=token_secret
+    verification_token_secret=token_secret
 
-    except ValidationError as e:
-        print(f"Validation error for user {raw_user.get('name')} :")
-        print(e)
+    async def on_after_register(self, user: User, request: Optional[Request] = None):
+        print(f"User {user.id} has registered.")
 
-print(f"\nTotal valid users: {len(valid_users)}")
+    async def on_after_forgot_password(self, user: User, token: str, request: Optional[Request] = None):
+        print(f"User {user.id} has forgot their password. Reset token: {token}")
 
-# Convert valid User objects back to dictionaries for easier data handling
-users_data = [user.model_dump() for user in valid_users]
+    async def on_after_request_verify(self, user: User, token: str, request: Optional[Request] = None):
+        print(f"Verification requested for user {user.id}. Verification token: {token}")
 
 
-# You can now access the data using list and dictionary indexing:
-# print(users_data[0]['name']) 
-# Output: John Doe
+async def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db)):
+    yield UserManager(user_db)
+
+bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
+
+def get_jwt_strategy():
+    twelve_hours = 43200
+    return JWTStrategy(secret=token_secret, lifetime_seconds=twelve_hours)
+
+auth_backend = AuthenticationBackend(
+    name="jwt",
+    transport=bearer_transport,
+    get_strategy=get_jwt_strategy
+)
+
+fastapi_users = FastAPIUsers[User, uuid.UUID](get_user_manager, auth_backends=[auth_backend])
+current_active_user = fastapi_users.current_user(active=True)
