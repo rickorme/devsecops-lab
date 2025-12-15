@@ -29,6 +29,8 @@
     }
     // ... other features ...
   }, // <-- The features block ends here!
+	
+	"initializeCommand": "./.devcontainer/ensure-ssh-agent.sh",
 
   // 2. CONTAINER ENV SECTION (must be a separate, top-level property)
   "containerEnv": {
