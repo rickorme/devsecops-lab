@@ -13,6 +13,9 @@ install:
 run:
 	uvicorn src.routes:app --host 0.0.0.0 --port 8000 --reload
 
+run-frontend:
+	streamlit run ./frontend.py
+
 # Testing: Runs pytest
 test:
 	pytest ./tests
@@ -34,3 +37,6 @@ audit-report:
 clean:
 	rm -rf __pycache__
 	rm -rf .pytest_cache
+
+delete-db:
+	rm -rf test.db

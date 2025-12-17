@@ -31,7 +31,8 @@ dependencies = [
     "uvicorn[standard]",
     "pydantic", # Note: Pydantic is implicitly installed by fastapi, but listed here for clarity
     "pydantic-settings",
-    "email-validator"
+    "email-validator",
+    "pillow" 
 ]
 
 # Development Dependencies (What you need for testing/CI/development)
