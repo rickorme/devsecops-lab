@@ -11,6 +11,10 @@ from fastapi_users.db import SQLAlchemyUserDatabase
 from data.db import User, get_user_db
 from config import get_settings
 
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+
+
 settings = get_settings()
 token_secret = settings.user_token_secret.get_secret_value()
 
@@ -47,3 +51,10 @@ auth_backend = AuthenticationBackend(
 
 fastapi_users = FastAPIUsers[User, uuid.UUID](get_user_manager, auth_backends=[auth_backend])
 current_active_user = fastapi_users.current_user(active=True)
+
+
+async def get_users_dict(session: AsyncSession):
+    users_result = await session.execute(select(User))
+    users = [row[0] for row in users_result.all()]
+    users_dict = {u.id: u.email for u in users}
+    return users_dict
