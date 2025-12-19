@@ -1,7 +1,8 @@
 import streamlit as st
 import requests
-import base64
-import urllib.parse
+from streamlit_js_eval import streamlit_js_eval
+# import base64
+# import urllib.parse
 
 st.set_page_config(page_title="Simple Social", layout="wide")
 
@@ -64,11 +65,16 @@ def login_page():
         st.info("Enter your email and password above")
 
 
+def upload_page_clear_inputs():
+    st.rerun()
+    # st.session_state.user_input_file = ""
+    
+
 def upload_page():
     st.title("📸 Share Something")
 
-    uploaded_file = st.file_uploader("Choose media", type=['png', 'jpg', 'jpeg', 'mp4', 'avi', 'mov', 'mkv', 'webm', 'webp'])
-    caption = st.text_area("Caption:", placeholder="What's on your mind?")
+    uploaded_file = st.file_uploader("Choose media", key="user_input_file", type=['png', 'jpg', 'jpeg', 'mp4', 'avi', 'mov', 'mkv', 'webm', 'webp'])
+    caption = st.text_area("Caption:", key="user_input_caption", placeholder="What's on your mind?")
 
     if uploaded_file and st.button("Share", type="primary"):
         with st.spinner("Uploading..."):
@@ -78,41 +84,24 @@ def upload_page():
 
             if response.status_code == 200:
                 st.success("Posted!")
+                st.session_state.user_input_caption = ""
                 st.rerun()
             else:
                 st.error("Upload failed!")
 
-
-def encode_text_for_overlay(text):
-    """Encode text for ImageKit overlay - base64 then URL encode"""
-    if not text:
-        return ""
-    # Base64 encode the text
-    base64_text = base64.b64encode(text.encode('utf-8')).decode('utf-8')
-    # URL encode the result
-    return urllib.parse.quote(base64_text)
-
-
-def create_transformed_url(original_url, transformation_params, caption=None):
-    if caption:
-        encoded_caption = encode_text_for_overlay(caption)
-        # Add text overlay at bottom with semi-transparent background
-        text_overlay = f"l-text,ie-{encoded_caption},ly-N20,lx-20,fs-100,co-white,bg-000000A0,l-end"
-        transformation_params = text_overlay
-
-    if not transformation_params:
-        return original_url
-
-    parts = original_url.split("/")
-
-    imagekit_id = parts[3]
-    file_path = "/".join(parts[4:])
-    base_url = "/".join(parts[:4])
-    return f"{base_url}/tr:{transformation_params}/{file_path}"
+@st.cache_data
+def fetch_thumbnail(post_id):
+    print("attempting to fetch thumbnail for post_id: "+post_id)
+    url = f"http://localhost:8000/posts/{post_id}/thumbnail"
+    resp = requests.get(url)
+    return resp.content if resp.status_code == 200 else None
 
 
 def feed_page():
     st.title("🏠 Feed")
+
+    if st.button("Refresh Feed"):
+        st.rerun(scope="app")
 
     response = requests.get("http://localhost:8000/feed", headers=get_headers())
     if response.status_code == 200:
@@ -133,7 +122,7 @@ def feed_page():
                 if post.get('is_owner', False):
                     if st.button("🗑️", key=f"delete_{post['id']}", help="Delete post"):
                         # Delete the post
-                        response = requests.delete(f"http://localhost:8000/posts/{post['id']}", headers=get_headers())
+                        response = requests.delete(f"http://localhost:8000/post/{post['id']}", headers=get_headers())
                         if response.status_code == 200:
                             st.success("Post deleted!")
                             st.rerun()
@@ -142,13 +131,28 @@ def feed_page():
 
             # Uniform media display with caption overlay
             caption = post.get('caption', '')
+            st.markdown(f"***{caption}***")
             if post['file_type'] == 'image':
-                uniform_url = create_transformed_url(post['url'], "", caption)
-                st.image(uniform_url, width=300)
+                # uniform_url = create_transformed_url(post['url'], "", caption)
+                # st.image(uniform_url, width=300)
+                print("Image file in feed")
+                # st.caption(caption)
+                thumb_bytes = fetch_thumbnail(post['id'])
+                if thumb_bytes:
+                    st.image(thumb_bytes)
+
+                # thumbnail_url = f"http://127.0.0.1:8000/posts/{post['id']}/thumbnail"
+
+                # st.markdown(
+                #     f'<img src="{thumbnail_url}" alt="Post Image" style="width:200px; border-radius:10px;">',
+                #     unsafe_allow_html=True
+                # )
+
             else:
                 # For videos: specify only height to maintain aspect ratio + caption overlay
-                uniform_video_url = create_transformed_url(post['url'], "w-400,h-200,cm-pad_resize,bg-blurred")
-                st.video(uniform_video_url, width=300)
+                print("Video filein feed")
+                # uniform_video_url = create_transformed_url(post['url'], "w-400,h-200,cm-pad_resize,bg-blurred")
+                # st.video(uniform_video_url, width=300)
                 st.caption(caption)
 
             st.markdown("")  # Space between posts
