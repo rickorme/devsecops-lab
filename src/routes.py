@@ -1,19 +1,20 @@
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form, Depends
-from data.models import PostCreate, PostResponse, UserRead, UserCreate, UserUpdate
-from data.models import PostCreate, PostResponse
-from typing import Optional
+from fastapi.responses import Response
+from data.models import UserRead, UserCreate, UserUpdate, PostResponse
+from typing import Optional, cast
 import logging
 import uuid
 
-from data.db import Post, create_db_and_tables, get_async_session, User
+# from data.db import Post, create_db_and_tables, get_async_session, User, generate_thumbnail
+# from data import db
+from data.db import Post, User, create_db_and_tables, get_async_session #, generate_thumbnail, get_posts
 from sqlalchemy.ext.asyncio import AsyncSession
 from contextlib import asynccontextmanager
 from sqlalchemy import select
 
 from data.users import auth_backend, current_active_user, fastapi_users
+from data.posts import get_posts, generate_thumbnail
 
-import io
-from PIL import Image
 
 # config for thumbnails
 THUMBNAIL_SIZE = (300, 300)
@@ -33,22 +34,7 @@ app.include_router(fastapi_users.get_verify_router(UserRead), prefix="/auth", ta
 app.include_router(fastapi_users.get_users_router(UserRead, UserUpdate), prefix="/users", tags=["users"])
 
 
-def generate_thumbnail(file_content: bytes) -> bytes | None:
-    try:
-        # Use io.BytesIO to treat the byte content as a file
-        image = Image.open(io.BytesIO(file_content))
-        image.thumbnail(THUMBNAIL_SIZE)
-
-        # Save the thumbnail to a new bytes buffer
-        thumb_buffer = io.BytesIO()
-        image.save(thumb_buffer, format="JPEG")
-        return thumb_buffer.getvalue()
-
-    except Exception as e:
-        logging.error(f"Error generating thumbnail: {e}")
-        return None
-
-@app.post("/upload")
+@app.post("/upload", response_model=PostResponse)
 async def upload_file(
         file: UploadFile = File(...),
         caption: str = Form(""),
@@ -57,7 +43,7 @@ async def upload_file(
 ):
     
     file_content = await file.read()
-    print(file.content_type)
+    logging.info(f"Received file upload: {file.filename} of type {file.content_type} from user {user.email}")
     slash_pos = str(file.content_type).find('/')
     file_type = str(file.content_type)[0:slash_pos]
 
@@ -80,8 +66,11 @@ async def upload_file(
             content_type=file.content_type
         )      
         session.add(post)
+        logging.info(f"User {user.email} uploaded a new post with id {post.id}")
         await session.commit()
+        logging.info(f"Post {post.id} committed to database")
         await session.refresh(post)
+        logging.info(f"Post {post.id} refreshed from database")
         return post
     
     except Exception as e:
@@ -91,37 +80,45 @@ async def upload_file(
         # The file stream is already closed by `await file.read()`
         pass # No need for cleanup of temp files  
 
+@app.get("/posts/{post_id}/file")
+async def get_post_file(post_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
+    # Assuming you have a way to fetch the Post by ID
+    post_uuid = cast(uuid, post_id)
+    post = await session.get(Post, post_uuid)
+    
+    if not post or post.file_content is None:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    media_type = cast(str, post.content_type)
+
+    return Response(content=post.file_content, media_type=media_type)
+
+@app.get("/posts/{post_id}/thumbnail")
+async def get_post_thumbnail(post_id: str, session: AsyncSession = Depends(get_async_session)):
+    try:
+        # 1. Physically convert the string to a UUID object
+        post_uuid = uuid.UUID(post_id) 
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid UUID format")
+    
+    post = await session.get(Post, post_uuid)
+    
+    if not post or post.thumbnail_content is None:
+        raise HTTPException(status_code=404, detail="Thumbnail not found")
+        
+    # Thumbnails were saved as JPEG
+    return Response(content=post.thumbnail_content, media_type="image/jpeg")
+
 
 @app.get("/feed")
 async def get_feed(
         user: User = Depends(current_active_user),
         session: AsyncSession = Depends(get_async_session)
 ):
-    result = await session.execute(select(Post).order_by(Post.created_at.desc()))
-    posts = [row[0] for row in result.all()]
-
-    # Get users for email lookup
-    users_result = await session.execute(select(User))
-    users = [row[0] for row in users_result.all()]
-    user_dict = {u.id: u.email for u in users}
-
-    posts_data = []
-    for post in posts:
-        posts_data.append(
-            {
-                "id": str(post.id),
-                "user_id": str(post.user_id),
-                "caption": post.caption,
-                "url": post.url,
-                "file_type": post.file_type,
-                "file_name": post.file_name,
-                "created_at": post.created_at.isoformat(),
-                "is_owner": post.user_id == user.id,
-                "email": user_dict.get(post.user_id, "unknown")
-            }
-        )
+    posts_data = await get_posts(session, user)
 
     return {"posts": posts_data}
+
 
 @app.delete("/post/{post_id}")
 async def delete_post(
@@ -129,6 +126,7 @@ async def delete_post(
         user: User = Depends(current_active_user),
         session: AsyncSession = Depends(get_async_session)):
     try:
+        logging.info(f"User {user.email} attempting to delete post {post_id}")
         post_uuid = uuid.UUID(post_id)
 
         result = await session.execute(select(Post).where(Post.id == post_uuid))
