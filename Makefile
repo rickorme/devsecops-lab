@@ -18,7 +18,7 @@ run-frontend:
 
 # Testing: Runs pytest
 test:
-	pytest ./tests
+	pytest 
 
 # Auditing: Runs the security audit
 # adding the "." path so that pi-audit treats it path as the project source:

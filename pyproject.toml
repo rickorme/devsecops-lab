@@ -37,6 +37,8 @@ dependencies = [
     "pytest-playwright",
     "pytest",
     "pytest-cov",
+    "pytest-asyncio",
+    "pytest-cov",
     "pip-audit"
 ]
 
@@ -51,10 +53,12 @@ dependencies = [
 # --- Tool Configuration (Replacing pytest.ini) ---
 [tool.pytest.ini_options]
 # Specifies the default arguments for 'pytest'
+pythonpath = ["."]
+testpaths = ["tests/unit"]
+asyncio_mode = "auto"
 
 addopts = [
     "-v", 
-    "--cov=", 
+    "--cov=src", 
     "--cov-report=term-missing",
 ]
-testpaths = ["tests"]
