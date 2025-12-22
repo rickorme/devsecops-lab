@@ -1,8 +1,5 @@
 import streamlit as st
 import requests
-from streamlit_js_eval import streamlit_js_eval
-# import base64
-# import urllib.parse
 
 st.set_page_config(page_title="Simple Social", layout="wide")
 
@@ -65,33 +62,69 @@ def login_page():
         st.info("Enter your email and password above")
 
 
-def upload_page_clear_inputs():
-    st.rerun()
-    # st.session_state.user_input_file = ""
+def clear_upload_form():
+    # This runs BEFORE the page is redrawn
+    # st.session_state.user_input_caption = ""
+    # To clear the file uploader, we use a trick: change its key
+    st.session_state.file_uploader_key += 1
+    st.session_state.upload_success = True
     
 
 def upload_page():
     st.title("📸 Share Something")
 
-    uploaded_file = st.file_uploader("Choose media", key="user_input_file", type=['png', 'jpg', 'jpeg', 'mp4', 'avi', 'mov', 'mkv', 'webm', 'webp'])
-    caption = st.text_area("Caption:", key="user_input_caption", placeholder="What's on your mind?")
+    # Initialize a counter to force-reset the file uploader
+    if "file_uploader_key" not in st.session_state:
+        st.session_state.file_uploader_key = 0
+    if "upload_success" not in st.session_state:
+        st.session_state.upload_success = False
+    
+    # 1. We wrap the logic in a function we can call
+    uploaded_file = st.file_uploader(
+        "Choose media", 
+        key=f"file_uploader_{st.session_state.file_uploader_key}",
+        type=['png', 'jpg', 'jpeg', 'mp4', 'avi', 'mov', 'mkv', 'webm', 'webp']
+    )
+    caption = st.text_area(
+        "Caption:", 
+        key=f"user_input_caption_{st.session_state.file_uploader_key}", 
+        placeholder="What's on your mind?"
+    )
+    # uploaded_file = st.file_uploader("Choose media", key="user_input_file", type=['png', 'jpg', 'jpeg', 'mp4', 'avi', 'mov', 'mkv', 'webm', 'webp'])
+    
 
-    if uploaded_file and st.button("Share", type="primary"):
+    if st.button("Share", type="primary"):
+        if not uploaded_file:
+            st.error("Please select a file first.")
+            return
+        
         with st.spinner("Uploading..."):
             files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
             data = {"caption": caption}
-            response = requests.post("http://localhost:8000/upload", files=files, data=data, headers=get_headers())
 
-            if response.status_code == 200:
-                st.success("Posted!")
-                st.session_state.user_input_caption = ""
-                st.rerun()
-            else:
-                st.error("Upload failed!")
+            try:
+                response = requests.post("http://localhost:8000/posts/create", files=files, data=data, headers=get_headers())
+
+                if response.status_code == 200:
+                    # 2. INSTEAD of setting state here, we call our clear function 
+                    # OR we set the state and then IMMEDIATELY rerun.
+                    # The most 'Bulletproof' way in a button block:
+                    clear_upload_form()
+                    st.rerun()
+                else:
+                    st.error("Upload failed: {response.text}")
+            except Exception as e:
+                st.error(f"Connection error: {e}")
+
+    # Display success message if we just reran after a successful upload
+    if st.session_state.upload_success:
+        st.success("Posted!")
+        st.session_state.upload_success = False # Reset the flag
+
 
 @st.cache_data
 def fetch_thumbnail(post_id):
-    print("attempting to fetch thumbnail for post_id: "+post_id)
+    print("Fetching thumbnail for post_id: "+post_id)
     url = f"http://localhost:8000/posts/{post_id}/thumbnail"
     resp = requests.get(url)
     return resp.content if resp.status_code == 200 else None
@@ -113,11 +146,73 @@ def feed_page():
 
         for post in posts:
             st.markdown("---")
+            post_id = post['id']
+    
+            # Track edit mode in session state
+            if f"editing_{post_id}" not in st.session_state:
+                st.session_state[f"editing_{post_id}"] = False
 
             # Header with user, date, and delete button (if owner)
             col1, col2 = st.columns([4, 1])
             with col1:
                 st.markdown(f"**{post['email']}** • {post['created_at'][:10]}")
+
+                if post.get('is_owner', False):
+                    # Check if we are currently editing this specific post
+                    if not st.session_state[f"editing_{post_id}"]:
+                        if st.button("Edit", key=f"edit_btn_{post_id}"):
+                            st.session_state[f"editing_{post_id}"] = True
+                            st.rerun()
+                    else:
+                        # WE ARE IN EDIT MODE
+                        new_caption = st.text_input(
+                            "New Caption:", 
+                            value=post.get('caption', ''), 
+                            key=f"input_{post_id}"
+                        )
+                        
+                        edit_col1, edit_col2 = st.columns(2)
+                        with edit_col1:
+                            if st.button("Save", key=f"save_{post_id}", type="primary"):
+                                data = {"caption": new_caption}
+                                response = requests.put(
+                                    f"http://localhost:8000/post/{post_id}", 
+                                    json=data, 
+                                    headers=get_headers()
+                                )
+                                if response.status_code == 200:
+                                    st.session_state[f"editing_{post_id}"] = False
+                                    st.success("Updated!")
+                                    st.rerun()
+                                else:
+                                    st.error("Failed to update!")
+                        
+                        with edit_col2:
+                            if st.button("Cancel", key=f"cancel_{post_id}"):
+                                st.session_state[f"editing_{post_id}"] = False
+                                st.rerun()
+
+                    # if st.button(label="Edit", key=f"edit_{post['id']}", help="Edit post caption"):
+                    #     logging.info(f"Edit button clicked for post {post['id']}")
+                    #     new_caption = st.text_input("New Caption:", value=post.get('caption', ''), key=f"new_caption_{post['id']}")
+                        
+                    #     if st.button("Save", key=f"save_{post['id']}"):
+                    #         # Update the post caption
+                    #         print("Save button clicked")
+                    #         data = {"caption": new_caption}
+                    #         # data = {"caption": "test"}
+                    #         # logging.info(f"Updating caption for post {post['id']} to: {new_caption}")
+                    #         response = requests.put(f"http://localhost:8000/post/{post['id']}", json=data, headers=get_headers())
+                    #         if response.status_code == 200:
+                    #             st.success("Caption updated!")
+                    #             st.rerun()
+                    #         else:
+                    #             st.error("Failed to update caption!")
+
+                    #     elif st.button("Cancel", key=f"cancel_{post['id']}"):
+                    #         print("Cancel button clicked")
+                    #         st.rerun()
+                
             with col2:
                 if post.get('is_owner', False):
                     if st.button("🗑️", key=f"delete_{post['id']}", help="Delete post"):
@@ -128,25 +223,17 @@ def feed_page():
                             st.rerun()
                         else:
                             st.error("Failed to delete post!")
+                    
+ 
 
             # Uniform media display with caption overlay
             caption = post.get('caption', '')
             st.markdown(f"***{caption}***")
             if post['file_type'] == 'image':
-                # uniform_url = create_transformed_url(post['url'], "", caption)
-                # st.image(uniform_url, width=300)
-                print("Image file in feed")
-                # st.caption(caption)
+                
                 thumb_bytes = fetch_thumbnail(post['id'])
                 if thumb_bytes:
                     st.image(thumb_bytes)
-
-                # thumbnail_url = f"http://127.0.0.1:8000/posts/{post['id']}/thumbnail"
-
-                # st.markdown(
-                #     f'<img src="{thumbnail_url}" alt="Post Image" style="width:200px; border-radius:10px;">',
-                #     unsafe_allow_html=True
-                # )
 
             else:
                 # For videos: specify only height to maintain aspect ratio + caption overlay
@@ -164,10 +251,10 @@ def feed_page():
 if st.session_state.user is None:
     login_page()
 else:
-    # Sidebar navigation
+    # Sidebar navigation 
     st.sidebar.title(f"👋 Hi {st.session_state.user['email']}!")
 
-    if st.sidebar.button("Logout"):
+    if st.sidebar.button(label="Logout"):
         st.session_state.user = None
         st.session_state.token = None
         st.rerun()
