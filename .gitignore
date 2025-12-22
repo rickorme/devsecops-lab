@@ -344,3 +344,6 @@ package-lock.json
 
 # Ignore test database files
 test.db
+
+# Ignore Playwright test results
+test-results/
