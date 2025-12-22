@@ -191,27 +191,6 @@ def feed_page():
                             if st.button("Cancel", key=f"cancel_{post_id}"):
                                 st.session_state[f"editing_{post_id}"] = False
                                 st.rerun()
-
-                    # if st.button(label="Edit", key=f"edit_{post['id']}", help="Edit post caption"):
-                    #     logging.info(f"Edit button clicked for post {post['id']}")
-                    #     new_caption = st.text_input("New Caption:", value=post.get('caption', ''), key=f"new_caption_{post['id']}")
-                        
-                    #     if st.button("Save", key=f"save_{post['id']}"):
-                    #         # Update the post caption
-                    #         print("Save button clicked")
-                    #         data = {"caption": new_caption}
-                    #         # data = {"caption": "test"}
-                    #         # logging.info(f"Updating caption for post {post['id']} to: {new_caption}")
-                    #         response = requests.put(f"http://localhost:8000/post/{post['id']}", json=data, headers=get_headers())
-                    #         if response.status_code == 200:
-                    #             st.success("Caption updated!")
-                    #             st.rerun()
-                    #         else:
-                    #             st.error("Failed to update caption!")
-
-                    #     elif st.button("Cancel", key=f"cancel_{post['id']}"):
-                    #         print("Cancel button clicked")
-                    #         st.rerun()
                 
             with col2:
                 if post.get('is_owner', False):
@@ -235,11 +214,11 @@ def feed_page():
                 if thumb_bytes:
                     st.image(thumb_bytes)
 
-            else:
-                # For videos: specify only height to maintain aspect ratio + caption overlay
-                print("Video filein feed")
-                # uniform_video_url = create_transformed_url(post['url'], "w-400,h-200,cm-pad_resize,bg-blurred")
-                # st.video(uniform_video_url, width=300)
+            elif post['file_type'] == 'video':
+                
+                print("Video file in feed")
+                # Use a standard video icon from a URL or a local file
+                st.image("https://cdn-icons-png.flaticon.com/512/1179/1179069.png", width=150, caption="🎬 Video Post")
                 st.caption(caption)
 
             st.markdown("")  # Space between posts
