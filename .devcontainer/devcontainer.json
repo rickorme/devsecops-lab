@@ -2,44 +2,55 @@
   // Name the container environment
   "name": "DevSecOps Lab Container",
 
-  // Use a base image that already includes Node.js
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "build": { 
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
 
-  // Ensure both Node deps and Python deps are installed after container creation
-  "postCreateCommand": "npm install && make install",
+ 
+  // "image": "python:3.13-bookworm",
 
   // Forward the FastAPI default port
   "forwardPorts": [8000],
 
   "customizations": {
     "vscode": {
+      "settings": {
+        // Points to the path where Dockerfile installs Python
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.analysis.extraPaths": ["${workspaceFolder}"]
+      },
       "extensions": [
         "ms-playwright.playwright",
         "ms-python.python",
         "ms-python.vscode-pylance",
-        "ritwickdey.LiveServer"
+        "charliermarsh.ruff",       
+        "ms-azuretools.vscode-docker"
       ]
     }
   },
   
-// 1. FEATURES SECTION (must be a complete object)
-  "features": {
-    "ghcr.io/devcontainers/features/python:1": {
-      "version": "3.11"
-    }
-    // ... other features ...
-  }, // <-- The features block ends here!
+  // 1. FEATURES SECTION (must be a complete object)
+  // "features": {
+  //   "ghcr.io/microsoft/playwright-python/playwright-python:latest": {
+  //     "version": "latest"
+  //   }
+  //   // ... other features ...
+  // }, 
+
+  // Ensure both Node deps and Python deps are installed after container creation
+  "postCreateCommand": "make install"
 	
-	"initializeCommand": "./.devcontainer/ensure-ssh-agent.sh",
+	// "initializeCommand": "./.devcontainer/ensure-ssh-agent.sh",
 
-  // 2. CONTAINER ENV SECTION (must be a separate, top-level property)
-  "containerEnv": {
-    "SSH_AUTH_SOCK": "/tmp/ssh-agent.sock"
-  },
+  // // 2. CONTAINER ENV SECTION (must be a separate, top-level property)
+  // "containerEnv": {
+  //   "SSH_AUTH_SOCK": "/tmp/ssh-agent.sock"
+  // },
 
-  // 3. RUN ARGS SECTION (must be a separate, top-level property)
-  "runArgs": [
-    "-v", 
-    "${env:SSH_AUTH_SOCK}:/tmp/ssh-agent.sock"
-  ]
+  // // 3. RUN ARGS SECTION (must be a separate, top-level property)
+  // "runArgs": [
+  //   "-v", 
+  //   "${env:SSH_AUTH_SOCK}:/tmp/ssh-agent.sock"
+  // ]
 }

@@ -32,16 +32,21 @@ dependencies = [
     "pydantic", # Note: Pydantic is implicitly installed by fastapi, but listed here for clarity
     "pydantic-settings",
     "email-validator",
-    "pillow" 
+    "pillow",
+    "playwright",
+    "pytest-playwright",
+    "pytest",
+    "pytest-cov",
+    "pip-audit"
 ]
 
 # Development Dependencies (What you need for testing/CI/development)
-[project.optional-dependencies]
-dev = [
-    "pytest",
-    "pytest-cov",
-    "pip-audit",
-]
+# [project.optional-dependencies]
+# dev = [
+#     "pytest",
+#     "pytest-cov",
+#     "pip-audit"
+# ]
 
 # --- Tool Configuration (Replacing pytest.ini) ---
 [tool.pytest.ini_options]
@@ -49,7 +54,7 @@ dev = [
 
 addopts = [
     "-v", 
-    "--cov=app", 
+    "--cov=", 
     "--cov-report=term-missing",
 ]
-testpaths = "tests"
+testpaths = ["tests"]

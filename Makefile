@@ -1,7 +1,7 @@
 # Makefile
 
 # The default target (what happens if you just type 'make')
-all: install test
+all: install run run-frontend test
 
 # Installation: Upgrades pip, installs audit tool, installs app deps
 install:
