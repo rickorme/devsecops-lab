@@ -21,7 +21,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-         python-version: '3.11.14'
+         python-version: '3.13'
 
     - name: Install dependencies
       run: make install
@@ -35,3 +35,22 @@ jobs:
     - name: Summarize Audit Results
       if: always() # Run this step even if the previous step fails (due to vulnerabilities)
       run: make audit-report
+
+  # Test: Runs pytest
+  unit-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+         python-version: '3.13'
+
+    - name: Install dependencies
+      run: make install
+
+    - name: Run tests
+      run: make test
