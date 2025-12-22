@@ -1,7 +1,5 @@
 # src/models.py
-from pydantic import BaseModel, EmailStr, field_validator
-from typing import Optional
-from enum import Enum
+from pydantic import BaseModel
 from fastapi_users import schemas
 from uuid import UUID
     
@@ -17,6 +15,9 @@ class PostResponse(BaseModel):
     
     class Config:
         from_attributes = True # Allows Pydantic to read data from SQLAlchemy objects
+
+class PostUpdate(BaseModel):
+    caption: str
 
 class UserRead(schemas.BaseUser[UUID]):
     pass
