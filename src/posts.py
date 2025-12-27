@@ -132,7 +132,7 @@ async def update_post_caption_service(
     if post is None:
         raise ValueError("Post not found")
     
-    if str(post.user_id) != user_id:
+    if str(post.user_id) != str(user_id):
         raise PermissionError("You are not authorized to edit this post")
 
     post.caption = new_caption # type: ignore

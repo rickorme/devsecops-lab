@@ -124,13 +124,16 @@ async def update_post_caption(
     logging.info(f"User {user.email} attempting to update caption for post {post_id}")
     
     try:
-        await update_post_caption_service(
+        post = await update_post_caption_service(
             post_id=post_id,
             new_caption=update_data.caption,
             user_id=user.id,
             session=session
         )
-        return {"success": True, "message": "Caption updated successfully"}
+        return {
+            "success": True,
+            "caption": post.caption
+        }
 
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
