@@ -17,8 +17,34 @@ run-frontend:
 	streamlit run ./frontend.py
 
 # Testing: Runs pytest
-test:
+test-unit:
 	pytest 
+
+test-api:
+	@echo "Starting isolated API Test Server on port 8001..."
+	@# 1. Start server in background and save PID
+	DATABASE_URL="sqlite+aiosqlite:///:memory:" \
+	uvicorn src.routes:app --host 127.0.0.1 --port 8001 > server_test.log 2>&1 & \
+	echo $$! > ./tests/api/test_server.pid; \
+	\
+	echo "Waiting for test server to initialize..."; \
+	sleep 5; \
+	\
+	echo "Running Newman tests..."; \
+	# 2. Run Newman inside an IF statement to handle success/fail correctly
+	if newman run ./tests/api/scrapbook.postman_collection.json \
+		-e ./tests/api/env.json \
+		--env-var "baseUrl=http://localhost:8001" \
+		--working-dir .; then \
+		echo "✅ Tests passed! Shutting down test server..."; \
+		kill $$(cat ./tests/api/test_server.pid); \
+		rm ./tests/api/test_server.pid; \
+	else \
+		echo "❌ Tests failed. Cleaning up server..."; \
+		kill $$(cat ./tests/api/test_server.pid); \
+		rm ./tests/api/test_server.pid; \
+		exit 1; \
+	fi
 
 # Auditing: Runs the security audit
 # adding the "." path so that pi-audit treats it path as the project source:

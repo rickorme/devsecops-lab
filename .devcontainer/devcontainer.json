@@ -1,22 +1,17 @@
 {
-  // Name the container environment
   "name": "DevSecOps Lab Container",
-
   "build": { 
     "dockerfile": "Dockerfile",
     "context": ".."
   },
-
- 
-  // "image": "python:3.13-bookworm",
-
-  // Forward the FastAPI default port
   "forwardPorts": [8000],
+
+  // 1. FEATURES: This is the modern way to add tools
+  "features": {},
 
   "customizations": {
     "vscode": {
       "settings": {
-        // Points to the path where Dockerfile installs Python
         "python.defaultInterpreterPath": "/usr/local/bin/python",
         "python.analysis.extraPaths": ["${workspaceFolder}"]
       },
@@ -24,33 +19,12 @@
         "ms-playwright.playwright",
         "ms-python.python",
         "ms-python.vscode-pylance",
-        "charliermarsh.ruff",       
+        "charliermarsh.ruff",        
         "ms-azuretools.vscode-docker"
       ]
     }
   },
   
-  // 1. FEATURES SECTION (must be a complete object)
-  // "features": {
-  //   "ghcr.io/microsoft/playwright-python/playwright-python:latest": {
-  //     "version": "latest"
-  //   }
-  //   // ... other features ...
-  // }, 
-
-  // Ensure both Node deps and Python deps are installed after container creation
+  // Use your Makefile to finish any local setup
   "postCreateCommand": "make install"
-	
-	// "initializeCommand": "./.devcontainer/ensure-ssh-agent.sh",
-
-  // // 2. CONTAINER ENV SECTION (must be a separate, top-level property)
-  // "containerEnv": {
-  //   "SSH_AUTH_SOCK": "/tmp/ssh-agent.sock"
-  // },
-
-  // // 3. RUN ARGS SECTION (must be a separate, top-level property)
-  // "runArgs": [
-  //   "-v", 
-  //   "${env:SSH_AUTH_SOCK}:/tmp/ssh-agent.sock"
-  // ]
 }
