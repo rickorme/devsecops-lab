@@ -1,4 +1,4 @@
-name: Python Dependency Audit
+name: Automated Testing Workflow
 
 on:
   # Triggers the workflow on push events to the 'main' branch
@@ -54,3 +54,41 @@ jobs:
 
     - name: Run tests
       run: make test
+
+  # Test: Runs FastAPI API tests using Newman
+  api-integration-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+         python-version: '3.12.3'
+
+    # We need Node.js to run Newman
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24.12.0'
+
+    - name: Install Python Dependencies
+      run: make install
+
+    - name: Install Newman
+      run: npm install -g newman
+
+    - name: Run API Tests
+      # This calls your working Makefile target
+      run: make test-api
+      
+    # PRO TIP: Upload the server log if tests fail
+    # This helps you debug why the API might have crashed in CI
+    - name: Upload Server Log on Failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: server-test-log
+        path: server_test.log
