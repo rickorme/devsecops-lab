@@ -1,3 +1,5 @@
+[![Automated Testing Workflow](https://github.com/rickorme/devsecops-lab/actions/workflows/ci-tests.yml/badge.svg)](https://github.com/rickorme/devsecops-lab/actions/workflows/ci-tests.yml)
+
 # Project description
 Lab project for DevSecOps course
 
