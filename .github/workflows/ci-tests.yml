@@ -53,7 +53,7 @@ jobs:
       run: make install
 
     - name: Run tests
-      run: make test
+      run: make test-unit
 
   # Test: Runs FastAPI API tests using Newman
   api-integration-tests:

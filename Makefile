@@ -32,7 +32,7 @@ test-api:
 	\
 	echo "Running Newman tests..."; \
 	# 2. Run Newman inside an IF statement to handle success/fail correctly
-	if newman run ./tests/api/scrapbook.postman_collection.json \
+	if newman run ./tests/api/devsecops01-project.postman_collection.json \
 		-e ./tests/api/env.json \
 		--env-var "baseUrl=http://localhost:8001" \
 		--working-dir .; then \
