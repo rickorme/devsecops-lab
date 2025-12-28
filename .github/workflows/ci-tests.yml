@@ -95,15 +95,32 @@ jobs:
 
   e2e-tests:
     runs-on: ubuntu-latest
-    # needs: unit-tests # Optional: only run if unit tests pass
+    # needs: unit-tests 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # We use the Playwright container which has Python + Browsers pre-installed
-    - name: Run E2E Tests
-      uses: docker://mcr.microsoft.com/playwright/python:v1.56.0-noble
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
-        # We must override the entrypoint to use bash so we can run multiple commands
-        entrypoint: /bin/bash
-        args: -c "make install && make test-e2e"        
+         python-version: '3.12.3'
+
+    - name: Install Dependencies
+      # This installs your app + playwright + browsers on the runner
+      run: |
+        make install
+        # We need to explicitly install the browsers on the GitHub Runner
+        playwright install --with-deps chromium
+
+    - name: Run E2E Tests
+      # Now 'make' will work because ubuntu-latest includes it by default
+      run: make test-e2e
+
+    - name: Upload Logs on Failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: e2e-logs
+        path: |
+          e2e_api.log
+          e2e_st.log
