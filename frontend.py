@@ -1,5 +1,9 @@
 import streamlit as st
 import requests
+import os
+
+# Default to port 8000 (Dev), but allow override (Test)
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 st.set_page_config(page_title="Simple Social", layout="wide")
 
@@ -31,14 +35,16 @@ def login_page():
             if st.button("Login", type="primary", use_container_width=True):
                 # Login using FastAPI Users JWT endpoint
                 login_data = {"username": email, "password": password}
-                response = requests.post("http://localhost:8000/auth/jwt/login", data=login_data)
+                endpoint = f"{API_URL}/auth/jwt/login"
+                response = requests.post(endpoint, data=login_data)
 
                 if response.status_code == 200:
                     token_data = response.json()
                     st.session_state.token = token_data["access_token"]
 
                     # Get user info
-                    user_response = requests.get("http://localhost:8000/users/me", headers=get_headers())
+                    endpoint = f"{API_URL}/users/me"
+                    user_response = requests.get(endpoint, headers=get_headers())
                     if user_response.status_code == 200:
                         st.session_state.user = user_response.json()
                         st.rerun()
@@ -51,7 +57,8 @@ def login_page():
             if st.button("Sign Up", type="secondary", use_container_width=True):
                 # Register using FastAPI Users
                 signup_data = {"email": email, "password": password}
-                response = requests.post("http://localhost:8000/auth/register", json=signup_data)
+                endpoint = f"{API_URL}/auth/register"
+                response = requests.post(endpoint, json=signup_data)
 
                 if response.status_code == 201:
                     st.success("Account created! Click Login now.")
@@ -103,7 +110,8 @@ def upload_page():
             data = {"caption": caption}
 
             try:
-                response = requests.post("http://localhost:8000/posts/create", files=files, data=data, headers=get_headers())
+                endpoint = f"{API_URL}/posts/create"
+                response = requests.post(endpoint, files=files, data=data, headers=get_headers())
 
                 if response.status_code == 200:
                     # 2. INSTEAD of setting state here, we call our clear function 
@@ -125,7 +133,7 @@ def upload_page():
 @st.cache_data
 def fetch_thumbnail(post_id):
     print("Fetching thumbnail for post_id: "+post_id)
-    url = f"http://localhost:8000/posts/{post_id}/thumbnail"
+    url = f"{API_URL}/posts/{post_id}/thumbnail"
     resp = requests.get(url)
     return resp.content if resp.status_code == 200 else None
 
@@ -136,7 +144,8 @@ def feed_page():
     if st.button("Refresh Feed"):
         st.rerun(scope="app")
 
-    response = requests.get("http://localhost:8000/feed", headers=get_headers())
+    endpoint = f"{API_URL}/feed"
+    response = requests.get(endpoint, headers=get_headers())
     if response.status_code == 200:
         posts = response.json()["posts"]
 
@@ -176,7 +185,7 @@ def feed_page():
                             if st.button("Save", key=f"save_{post_id}", type="primary"):
                                 data = {"caption": new_caption}
                                 response = requests.put(
-                                    f"http://localhost:8000/post/{post_id}", 
+                                    f"{API_URL}/post/{post_id}", 
                                     json=data, 
                                     headers=get_headers()
                                 )
@@ -196,7 +205,7 @@ def feed_page():
                 if post.get('is_owner', False):
                     if st.button("🗑️", key=f"delete_{post['id']}", help="Delete post"):
                         # Delete the post
-                        response = requests.delete(f"http://localhost:8000/post/{post['id']}", headers=get_headers())
+                        response = requests.delete(f"{API_URL}/post/{post['id']}", headers=get_headers())
                         if response.status_code == 200:
                             st.success("Post deleted!")
                             st.rerun()

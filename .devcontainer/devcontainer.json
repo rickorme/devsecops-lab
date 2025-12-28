@@ -4,10 +4,14 @@
     "dockerfile": "Dockerfile",
     "context": ".."
   },
-  "forwardPorts": [8000],
+  "forwardPorts": [8000, 8001, 6080],
 
   // 1. FEATURES: This is the modern way to add tools
-  "features": {},
+  "features": {
+    // 1. Adds a lightweight desktop environment + VNC Server
+    "ghcr.io/devcontainers/features/desktop-lite:1": {
+      "version": "latest"
+    }},
 
   "customizations": {
     "vscode": {

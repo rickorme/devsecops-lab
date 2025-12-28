@@ -46,6 +46,39 @@ test-api:
 		exit 1; \
 	fi
 
+test-e2e:
+	@echo "🚀 Setting up E2E environment..."
+	@# 1. Start Backend (In-Memory DB) on Port 8002
+	DATABASE_URL="sqlite+aiosqlite:///:memory:" \
+	uvicorn src.routes:app --host 127.0.0.1 --port 8002 > e2e_api.log 2>&1 & \
+	echo $$! > .e2e_api.pid
+	
+	@echo "⏳ Waiting for Backend to initialize..."
+	@sleep 5
+
+	@# 2. Start Frontend on Port 8502, pointing to Backend 8002
+	API_URL="http://localhost:8002" \
+	streamlit run ./frontend.py --server.port 8502 --server.headless true > e2e_st.log 2>&1 & \
+	echo $$! > .e2e_st.pid
+	
+	@echo "⏳ Waiting for Frontend to initialize..."
+	@sleep 5
+
+	@# 3. Run Playwright Tests
+	@echo "🎥 Running Playwright Tests..."
+	# We pass the Streamlit URL to the tests via an env var (or pytest.ini)
+	BASE_URL="http://localhost:8502" \
+	pytest tests/e2e || \
+	(echo "❌ E2E Tests Failed. Cleaning up..." && \
+	 kill $$(cat .e2e_api.pid) && rm .e2e_api.pid && \
+	 kill $$(cat .e2e_st.pid) && rm .e2e_st.pid && \
+	 exit 1)
+
+	@# 4. Success Cleanup
+	@echo "✅ E2E Tests Passed! Cleaning up..."
+	@kill $$(cat .e2e_api.pid) && rm .e2e_api.pid
+	@kill $$(cat .e2e_st.pid) && rm .e2e_st.pid	
+
 # Auditing: Runs the security audit
 # adding the "." path so that pi-audit treats it path as the project source:
 # For projects using pyproject.toml (following PEP 621 or PEP 518),

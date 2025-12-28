@@ -11,7 +11,7 @@ WORKDIR /workspaces/devsecops-lab
 # 1. Install Node.js and Newman
 # Since we need Newman for the pipeline, we install it globally here.
 # The base image is Ubuntu-based (Jammy), so we can use standard commands.
-RUN apt-get update && apt-get install -y curl \
+RUN apt-get update && apt-get install -y curl make \
     && curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g newman \
