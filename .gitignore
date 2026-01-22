@@ -335,8 +335,15 @@ Thumbs.db
 
 # Lockfiles you may want to ignore in certain cases (optional)
 # npm
-# package-lock.json
+package-lock.json
 # pnpm
 # pnpm-lock.yaml
 # yarn
 # yarn.lock
+
+
+# Ignore test database files
+test.db
+
+# Ignore Playwright test results
+test-results/

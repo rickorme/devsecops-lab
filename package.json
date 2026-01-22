@@ -1,0 +1,14 @@
+{
+  "name": "devsecops-lab",
+  "version": "1.0.0",
+  "description": "Playwright dependencies for Python/pytest project",
+  "main": "",
+  "scripts": {
+    "postinstall": "echo Playwright dependencies installed via npm." 
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^24.10.1"
+  }
+}

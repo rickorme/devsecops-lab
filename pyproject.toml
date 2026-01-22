@@ -1,0 +1,64 @@
+# pyproject.toml
+
+[build-system]
+# Standard settings for building Python packages.
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# --- Project Metadata and Dependencies (Replacing requirements.txt) ---
+[project]
+name = "my-fastapi-app"
+version = "0.1.0"
+description = "Simple demo app for DevSecOps"
+authors = [
+    {name = "Rick Orme"},
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.11"
+keywords = ["fastapi", "devsecops"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+
+# Production Dependencies (What the app needs to run)
+dependencies = [
+    "aiosqlite>=0.21.0",
+    "fastapi>=0.118.0",
+    "fastapi-users[sqlalchemy]>=14.0.1",
+    "python-dotenv>=1.1.1",
+    "streamlit>=1.50.0",
+    "uvicorn[standard]",
+    "pydantic", # Note: Pydantic is implicitly installed by fastapi, but listed here for clarity
+    "pydantic-settings",
+    "email-validator",
+    "pillow",
+    "playwright==1.56.0",
+    "pytest-playwright>=0.5.0",
+    "pytest",
+    "pytest-cov",
+    "pytest-asyncio",
+    "pytest-cov",
+    "pip-audit"
+]
+
+# Development Dependencies (What you need for testing/CI/development)
+# [project.optional-dependencies]
+# dev = [
+#     "pytest",
+#     "pytest-cov",
+#     "pip-audit"
+# ]
+
+# --- Tool Configuration (Replacing pytest.ini) ---
+[tool.pytest.ini_options]
+# Specifies the default arguments for 'pytest'
+pythonpath = ["."]
+testpaths = ["tests/unit"]
+asyncio_mode = "auto"
+
+addopts = [
+    "-v", 
+    "--cov=src", 
+    "--cov-report=term-missing",
+]
